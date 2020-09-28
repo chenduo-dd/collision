@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>矩形碰撞demo</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+			}
+
+			.tips {
+				display: none;
+				position: absolute;
+				padding: 10px;
+				background-color: aqua;
+				font-size: 20px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="tips" id="tips">你碰到我啦！！！</div>
+		<script>
+			class Rect {
+				constructor(options) {
+					this.width = options.width;
+					this.height = options.height;
+					this.top = options.top;
+					this.left = options.left;
+					this.color = options.color;
+					this.initDom();
+				}
+				isCollided() {
+					return allShapes.some((rect) => {
+						if (rect === this) {
+							return false;
+						}
+                        const centerPoint1 = {
+                            x:this.left + this.width / 2,
+                            y:this.top + this.height / 2,
+                        }
+                        const centerPoint2 = {
+                            x:rect.left + rect.width / 2,
+                            y:rect.top + rect.height / 2,
+                        }
+                        if((Math.abs(centerPoint1.x-centerPoint2.x)<=(this.width+rect.width)/2)&&(Math.abs(centerPoint1.y-centerPoint2.y)<=(this.height+rect.height)/2)){
+                            return true
+                        }
+					});
+				}
+				initDom() {
+					const dom = document.createElement('div');
+					dom.style.position = 'absolute';
+					dom.style.cursor = 'move';
+					dom.style.top = `${this.top}px`;
+					dom.style.left = `${this.left}px`;
+					dom.style.width = `${this.width}px`;
+					dom.style.height = `${this.height}px`;
+					dom.style.background = `${this.color}`;
+					this.dom = dom;
+					this.initEvent();
+					document.body.appendChild(dom);
+				}
+				initEvent() {
+					const tips = document.querySelector('.tips');
+					this.dom.addEventListener('mousedown', (event) => {
+						this.canMove = true;
+						this.start = {
+							x: event.clientX,
+							y: event.clientY,
+							top: this.top,
+							left: this.left,
+						};
+
+						this.dom.addEventListener('mousemove', (event) => {
+							if (this.canMove) {
+								this.top = this.start.top + (event.clientY - this.start.y);
+								this.left = this.start.left + (event.clientX - this.start.x);
+								this.dom.style.top = `${this.top}px`;
+								this.dom.style.left = `${this.left}px`;
+								this.dom.style.zIndex = 2;
+								if (this.isCollided()) {
+									tips.style.display = 'block';
+								} else {
+									tips.style.display = 'none';
+								}
+							}
+						});
+						this.dom.addEventListener('mouseup', (event) => {
+							this.canMove = false;
+							this.dom.style.zIndex = 1;
+						});
+					});
+				}
+			}
+
+			const rect1 = new Rect({
+				width: 200,
+				height: 100,
+				left: 100,
+				top: 100,
+				color: 'red',
+			});
+			const rect2 = new Rect({
+				width: 300,
+				height: 200,
+				left: 350,
+				top: 300,
+				color: 'blue',
+			});
+			const rect3 = new Rect({
+				width: 130,
+				height: 190,
+				left: 50,
+				top: 300,
+				color: 'green',
+			});
+			const allShapes = [rect1, rect2, rect3];
+		</script>
+	</body>
+</html>
