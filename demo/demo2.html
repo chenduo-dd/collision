@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>圆碰撞检测demo</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+			}
+
+			.tips {
+				display: none;
+				position: absolute;
+				padding: 10px;
+				background-color: aqua;
+				font-size: 20px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="tips" id="tips">你碰到我啦！！！</div>
+		<script>
+			class Circle {
+				constructor(options) {
+					this.left = options.left;
+					this.top = options.top;
+					this.radius = options.radius;
+					this.color = options.color;
+					this.initDom();
+				}
+				isCollided() {
+					return allShapes.some((shape) => {
+			                     if(shape===this){
+			                         return false
+			                     }
+			                     const centerPoint1 = {
+			                         x:this.left + this.radius,
+			                         y:this.top + this.radius,
+			                     }
+			                     const centerPoint2 = {
+			                         x:shape.left + shape.radius,
+			                         y:shape.top + shape.radius,
+			                     }
+			                     if(Math.sqrt(Math.pow(Math.abs(centerPoint1.x-centerPoint2.x), 2)+Math.pow(Math.abs(centerPoint1.y-centerPoint2.y), 2))<shape.radius+this.radius){
+                                    return true
+                                 }else{
+                                     return false
+                                 }
+			                 });
+				}
+				initDom() {
+					const dom = document.createElement('div');
+					dom.style.position = 'absolute';
+					dom.style.cursor = 'move';
+					dom.style.top = `${this.top}px`;
+					dom.style.left = `${this.left}px`;
+					dom.style.width = `${this.radius*2}px`;
+					dom.style.height = `${this.radius*2}px`;
+					dom.style.borderRadius = `50%`;
+					dom.style.background = `${this.color}`;
+					this.dom = dom;
+					document.body.appendChild(dom);
+					this.initEvent();
+				}
+				initEvent() {
+					const tips = document.querySelector('.tips');
+					this.dom.addEventListener('mousedown', (event) => {
+						this.start = {
+							x: event.clientX,
+							y: event.clientY,
+							top: this.top,
+							left: this.left,
+						};
+						this.canMove = true;
+						this.dom.style.zIndex = 2;
+						this.dom.addEventListener('mousemove', (event) => {
+							if (this.canMove) {
+								this.top = event.clientY - (this.start.y - this.start.top);
+								this.left = event.clientX - (this.start.x - this.start.left);
+								this.dom.style.top = `${this.top}px`;
+								this.dom.style.left = `${this.left}px`;
+                                if(this.isCollided()){
+                                    tips.style.display = 'block'
+                                }else{
+                                    tips.style.display = 'none'
+                                }
+							}
+						});
+						this.dom.addEventListener('mouseup', (event) => {
+							this.canMove = false;
+							this.dom.style.zIndex = 1;
+						});
+					});
+				}
+			}
+			const circle1 = new Circle({
+				left: 100,
+				top: 50,
+				radius: 100,
+				color: 'red',
+			});
+			const circle2 = new Circle({
+				left: 350,
+				top: 300,
+				radius: 150,
+				color: 'blue',
+			});
+			const circle3 = new Circle({
+				left: 50,
+				top: 300,
+				radius: 120,
+				color: 'green',
+			});
+			const allShapes = [circle1, circle2, circle3];
+		</script>
+	</body>
+</html>

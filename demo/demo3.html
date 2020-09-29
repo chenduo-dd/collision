@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>圆和矩形碰撞检测demo</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+			}
+
+			.tips {
+				display: none;
+				position: absolute;
+				padding: 10px;
+				background-color: aqua;
+				font-size: 20px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="tips" id="tips">你碰到我啦！！！</div>
+		<script>
+			function isCircleAndRectCollided({ circle, rect }) {
+				const closestPoint = {};
+
+				if (circle.x < rect.x) {
+					closestPoint.x = rect.x;
+				} else if (circle.x > rect.x + rect.w) {
+					closestPoint.x = rect.x + rect.w;
+				} else {
+					closestPoint.x = circle.x;
+				}
+				if (circle.y < rect.y) {
+					closestPoint.y = rect.y;
+				} else if (circle.y > rect.y + rect.h) {
+					closestPoint.y = rect.y + rect.h;
+				} else {
+					closestPoint.y = circle.y;
+				}
+
+				if (
+					Math.sqrt(Math.pow(closestPoint.x - circle.x, 2) + Math.pow(closestPoint.y - circle.y, 2)) <=
+					circle.r
+				) {
+					return true;
+				}
+				return false;
+			}
+			class Circle {
+				constructor(options) {
+					this.left = options.left;
+					this.top = options.top;
+					this.radius = options.radius;
+					this.color = options.color;
+					this.type = 'circle';
+					this.initDom();
+				}
+				isCollided() {
+					return allShapes.some((shape) => {
+						if (shape === this) {
+							return false;
+						}
+						switch (shape.type) {
+							case 'circle':
+								const centerPoint1 = {
+									x: this.left + this.radius,
+									y: this.top + this.radius,
+								};
+								const centerPoint2 = {
+									x: shape.left + shape.radius,
+									y: shape.top + shape.radius,
+								};
+								if (
+									Math.sqrt(
+										Math.pow(Math.abs(centerPoint1.x - centerPoint2.x), 2) +
+											Math.pow(Math.abs(centerPoint1.y - centerPoint2.y), 2)
+									) <
+									(shape.radius + this.radius)
+								) {
+									return true;
+								} else {
+									return false;
+								}
+							case 'rect':
+								const circle = {
+									x: this.left + this.radius,
+									y: this.top + this.radius,
+									r: this.radius,
+								};
+								const rect = {
+									x: shape.left,
+									y: shape.top,
+									w: shape.width,
+									h: shape.height,
+								};
+								return isCircleAndRectCollided({ circle, rect });
+							default:
+								return false;
+						}
+					});
+				}
+				initDom() {
+					const dom = document.createElement('div');
+					dom.style.position = 'absolute';
+					dom.style.cursor = 'move';
+					dom.style.top = `${this.top}px`;
+					dom.style.left = `${this.left}px`;
+					dom.style.width = `${this.radius*2}px`;
+					dom.style.height = `${this.radius*2}px`;
+					dom.style.borderRadius = `50%`;
+					dom.style.background = `${this.color}`;
+					this.dom = dom;
+					document.body.appendChild(dom);
+					this.initEvent();
+				}
+				initEvent() {
+					const tips = document.querySelector('.tips');
+					this.dom.addEventListener('mousedown', (event) => {
+						this.start = {
+							x: event.clientX,
+							y: event.clientY,
+							top: this.top,
+							left: this.left,
+						};
+						this.canMove = true;
+						this.dom.style.zIndex = 2;
+						this.dom.addEventListener('mousemove', (event) => {
+							if (this.canMove) {
+								this.top = event.clientY - (this.start.y - this.start.top);
+								this.left = event.clientX - (this.start.x - this.start.left);
+								this.dom.style.top = `${this.top}px`;
+								this.dom.style.left = `${this.left}px`;
+								if (this.isCollided()) {
+									tips.style.display = 'block';
+								} else {
+									tips.style.display = 'none';
+								}
+							}
+						});
+						this.dom.addEventListener('mouseup', (event) => {
+							this.canMove = false;
+							this.dom.style.zIndex = 1;
+						});
+					});
+				}
+			}
+			class Rect {
+				constructor(options) {
+					this.width = options.width;
+					this.height = options.height;
+					this.top = options.top;
+					this.left = options.left;
+					this.color = options.color;
+					this.type = 'rect';
+					this.initDom();
+				}
+				isCollided() {
+					return allShapes.some((shape) => {
+						if (shape === this) {
+							return false;
+						}
+						switch (shape.type) {
+							case 'circle':
+								const circle = {
+									x: shape.left + shape.radius,
+									y: shape.top + shape.radius,
+									r: shape.radius,
+								};
+								const rect = {
+									x: this.left,
+									y: this.top,
+									w: this.width,
+									h: this.height,
+								};
+								return isCircleAndRectCollided({ circle, rect });
+							case 'rect':
+								const centerPoint1 = {
+									x: this.left + this.width / 2,
+									y: this.top + this.height / 2,
+								};
+								const centerPoint2 = {
+									x: shape.left + shape.width / 2,
+									y: shape.top + shape.height / 2,
+								};
+								if (
+									Math.abs(centerPoint1.x - centerPoint2.x) <= (this.width + shape.width) / 2 &&
+									Math.abs(centerPoint1.y - centerPoint2.y) <= (this.height + shape.height) / 2
+								) {
+									return true;
+								} else {
+									return false;
+								}
+							default:
+								return false;
+						}
+					});
+				}
+				initDom() {
+					const dom = document.createElement('div');
+					dom.style.position = 'absolute';
+					dom.style.cursor = 'move';
+					dom.style.top = `${this.top}px`;
+					dom.style.left = `${this.left}px`;
+					dom.style.width = `${this.width}px`;
+					dom.style.height = `${this.height}px`;
+					dom.style.background = `${this.color}`;
+					this.dom = dom;
+					this.initEvent();
+					document.body.appendChild(dom);
+				}
+				initEvent() {
+					const tips = document.querySelector('.tips');
+					this.dom.addEventListener('mousedown', (event) => {
+						this.canMove = true;
+						this.start = {
+							x: event.clientX,
+							y: event.clientY,
+							top: this.top,
+							left: this.left,
+						};
+
+						this.dom.addEventListener('mousemove', (event) => {
+							if (this.canMove) {
+								this.top = this.start.top + (event.clientY - this.start.y);
+								this.left = this.start.left + (event.clientX - this.start.x);
+								this.dom.style.top = `${this.top}px`;
+								this.dom.style.left = `${this.left}px`;
+								this.dom.style.zIndex = 2;
+								if (this.isCollided()) {
+									tips.style.display = 'block';
+								} else {
+									tips.style.display = 'none';
+								}
+							}
+						});
+						this.dom.addEventListener('mouseup', (event) => {
+							this.canMove = false;
+							this.dom.style.zIndex = 1;
+						});
+					});
+				}
+			}
+			const rect = new Rect({
+				width: 300,
+				height: 200,
+				left: 350,
+				top: 300,
+				color: 'blue',
+			});
+			const rect2 = new Rect({
+				width: 300,
+				height: 200,
+				left: 550,
+				top: 600,
+				color: 'green',
+			});
+			const circle = new Circle({
+				left: 100,
+				top: 50,
+				radius: 100,
+				color: 'red',
+			});
+			const circle2 = new Circle({
+				left: 100,
+				top: 300,
+				radius: 100,
+				color: 'red',
+			});
+
+			const allShapes = [circle, rect, rect2, circle2];
+		</script>
+	</body>
+</html>
